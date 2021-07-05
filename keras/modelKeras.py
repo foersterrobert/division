@@ -1,8 +1,8 @@
-from keras.models import Sequential
-from keras.layers import Dense, Activation
-import keras
-from keras import Input
-from keras import backend as K
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation
+from tensorflow import keras
+from tensorflow.keras import Input
+from tensorflow.keras import backend as K
 from numpy.core.defchararray import array
 import tensorflow as tf
 import numpy as np
@@ -12,7 +12,7 @@ import math
 import os
 
 BATCH_SIZE = 256
-EPOCHS = 10
+EPOCHS = 1
 
 def devision_data(size):
     xdata = []
@@ -20,7 +20,7 @@ def devision_data(size):
     ydatalist = []
     for i in range(size):
         i1, i2 = float(decimal.Decimal(random.randrange(100, 2000))/100), float(decimal.Decimal(random.randrange(100, 2000))/100)
-        y = i1 / i2 / 20
+        y = i1 / i2 / 100
         xdata.append([i1, i2])
         ydata.append([y])
         ydatalist.append(y)
@@ -39,16 +39,6 @@ def custom_activation(x):
             tf.where(greaterFiveteen, 1 - 1/(109.0858178 * x - 1403.359435), 
             0.03 * tf.math.log(tf.where(greaterZero, tf.where(smallerEqualFiveteen, (1000000 * x + 1), 0), 0)) + 0.5))
 
-def custom_activationLast(x):
-    smallerEqualZero = tf.less_equal(x, tf.constant(0.0))
-    greaterZero = tf.greater(x, tf.constant(0.0))
-    greaterFiveteen = tf.greater(x, tf.constant(15.0))
-    smallerEqualFiveteen = tf.less_equal(x, tf.constant(15.0))
-    x = tf.where(smallerEqualZero, 1.359140915 * tf.math.exp(tf.where(smallerEqualZero, (x-1), 0)), 
-        tf.where(greaterFiveteen, 1 - 1/(109.0858178 * x - 1403.359435), 
-        0.03 * tf.math.log(tf.where(greaterZero, tf.where(smallerEqualFiveteen, (1000000 * x + 1), 0), 0)) + 0.5))
-    return x*5
-
 load = input('load? y/n ')
 if load == 'y':
     model = keras.models.load_model('./model/KerasHard.pth')
@@ -57,7 +47,7 @@ if load == 'y':
         inputs = input('\ninputs: ')
         try:
             arr = np.array([[int(i.strip()) for i in inputs.split(',')]])
-            print(float(model.predict(arr)*20))
+            print(float(model.predict(arr)*100))
         except:
             exit()
 
@@ -66,7 +56,7 @@ model = Sequential([
     Dense(2),
     Activation(custom_activation),
     Dense(1),
-    Activation(custom_activationLast),
+    Activation(custom_activation),
 ])
 
 model.compile(optimizer='nadam',
