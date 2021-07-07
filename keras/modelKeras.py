@@ -1,5 +1,6 @@
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Activation
+from tensorflow.keras.layers import Dense, Activation, Dropout
+from tensorflow.keras.optimizers import SGD
 from tensorflow import keras
 from tensorflow.keras import Input
 from tensorflow.keras import backend as K
@@ -11,8 +12,8 @@ import decimal
 import math
 import os
 
-BATCH_SIZE = 256
-EPOCHS = 1
+BATCH_SIZE = 32
+EPOCHS = 1200
 
 def devision_data(size):
     xdata = []
@@ -27,7 +28,7 @@ def devision_data(size):
 
     return np.array(xdata), np.array(ydata), ydatalist
 
-X_train, Y_train, Ytrain_list = devision_data(64000)
+X_train, Y_train, Ytrain_list = devision_data(32000)
 X_test, Y_test, Ytest_list = devision_data(12000)
 
 def custom_activation(x):
@@ -38,40 +39,60 @@ def custom_activation(x):
     return tf.where(smallerEqualZero, 1.359140915 * tf.math.exp(tf.where(smallerEqualZero, (x-1), 0)), 
             tf.where(greaterFiveteen, 1 - 1/(109.0858178 * x - 1403.359435), 
             0.03 * tf.math.log(tf.where(greaterZero, tf.where(smallerEqualFiveteen, (1000000 * x + 1), 0), 0)) + 0.5))
+    return K.sigmoid(x)
 
-load = input('load? y/n ')
-if load == 'y':
+load = input('load? h/y ')
+if load == 'h':
     model = keras.models.load_model('./model/KerasHard.pth')
 
     while True:
         inputs = input('\ninputs: ')
-        try:
-            arr = np.array([[int(i.strip()) for i in inputs.split(',')]])
-            print(float(model.predict(arr)*100))
-        except:
-            exit()
+        if inputs == 'w':
+            for layer in model.layers:
+                print(layer.get_weights())
+        
+        else:
+            try:
+                arr = np.array([[int(i.strip()) for i in inputs.split(',')]])
+                print(float(model.predict(arr)*100))
+            except:
+                exit()
+
+elif load == 'y':
+    model = keras.models.load_model('./model/Keras.pth')
+
+    while True:
+        inputs = input('\ninputs: ')
+        if inputs == 'w':
+            for layer in model.layers:
+                print(layer.get_weights())
+        
+        else:
+            try:
+                arr = np.array([[int(i.strip()) for i in inputs.split(',')]])
+                print(float(model.predict(arr)*100))
+            except:
+                exit()
 
 model = Sequential([
-    # Input(shape=(2,)),
-    Dense(2),
-    Activation(custom_activation),
-    Dense(1),
-    Activation(custom_activation),
+    Dense(40, activation=custom_activation),
+    Dropout(0.0005),
+    Dense(1, activation=custom_activation),
 ])
 
 model.compile(optimizer='nadam',
-              loss=tf.keras.losses.MeanAbsoluteError())
+              loss='mean_absolute_error')
 
 hist = model.fit(X_train, Y_train,
           batch_size=BATCH_SIZE, epochs=EPOCHS)
 
 model.evaluate(X_test, Y_test)
 
-layer0 = [np.array([[0.000001, 0.0], [0.0, 0.000001]], dtype=np.float32), np.array([-0.000001, -0.000001], dtype=np.float32)]
-layer2 = [np.array([[33.3333], [-33.3333]], dtype=np.float32), np.array([-3.912023], dtype=np.float32)]
+# layer0 = [np.array([[0.000001, 0.0], [0.0, 0.000001]], dtype=np.float32), np.array([-0.000001, -0.000001], dtype=np.float32)]
+# layer2 = [np.array([[33.3333], [-33.3333]], dtype=np.float32), np.array([-3.912023], dtype=np.float32)]
 
-model.layers[0].set_weights(layer0)
-model.layers[2].set_weights(layer2)
+# model.layers[0].set_weights(layer0)
+# model.layers[1].set_weights(layer2)
 
 print('ZeroMAE*5', np.mean(Y_test))
 
@@ -81,10 +102,10 @@ for i in Ytest_list:
 
 print('MeanMAE*5:', MeanMAE5Counter/len(Ytest_list))
 
-save = input('save? y/n ')
+save = input('save? y ')
 if save == 'y':
     model_folder_path = './model'
-    file_name='KerasHard.pth'
+    file_name='Keras.pth'
     if not os.path.exists(model_folder_path):
         os.makedirs(model_folder_path)
 
