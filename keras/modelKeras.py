@@ -1,19 +1,14 @@
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Activation, Dropout
-from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.layers import Dense
 from tensorflow import keras
-from tensorflow.keras import Input
-from tensorflow.keras import backend as K
-from numpy.core.defchararray import array
 import tensorflow as tf
 import numpy as np
 import random
 import decimal
-import math
 import os
 
-BATCH_SIZE = 32
-EPOCHS = 1200
+BATCH_SIZE = 4
+EPOCHS = 90
 
 def devision_data(size):
     xdata = []
@@ -28,18 +23,25 @@ def devision_data(size):
 
     return np.array(xdata), np.array(ydata), ydatalist
 
-X_train, Y_train, Ytrain_list = devision_data(32000)
-X_test, Y_test, Ytest_list = devision_data(12000)
+X_train, Y_train, Ytrain_list = devision_data(24000)
+X_test, Y_test, Ytest_list = devision_data(6000)
 
+@tf.custom_gradient
 def custom_activation(x):
     smallerEqualZero = tf.less_equal(x, tf.constant(0.0))
     greaterZero = tf.greater(x, tf.constant(0.0))
     greaterFiveteen = tf.greater(x, tf.constant(15.0))
     smallerEqualFiveteen = tf.less_equal(x, tf.constant(15.0))
-    return tf.where(smallerEqualZero, 1.359140915 * tf.math.exp(tf.where(smallerEqualZero, (x-1), 0)), 
+    result = tf.where(smallerEqualZero, 1.359140915 * tf.math.exp(tf.where(smallerEqualZero, (x-1), 0)), 
             tf.where(greaterFiveteen, 1 - 1/(109.0858178 * x - 1403.359435), 
             0.03 * tf.math.log(tf.where(greaterZero, tf.where(smallerEqualFiveteen, (1000000 * x + 1), 0), 0)) + 0.5))
-    return K.sigmoid(x)
+
+    def grad(dy):
+        return dy * tf.where(smallerEqualZero, 1.359140915 * tf.math.exp(tf.where(smallerEqualZero, (x-1), 0)), 
+            tf.where(greaterFiveteen, 501379254/(4596191*(501379254 * x / 4596191 - 280671887 / 200000)**2), 
+            30000/(1000000*x+1)))
+
+    return result, grad
 
 load = input('load? h/y ')
 if load == 'h':
@@ -75,32 +77,32 @@ elif load == 'y':
                 exit()
 
 model = Sequential([
-    Dense(40, activation=custom_activation),
-    Dropout(0.0005),
+    Dense(2, activation=custom_activation),
     Dense(1, activation=custom_activation),
 ])
 
 model.compile(optimizer='nadam',
               loss='mean_absolute_error')
 
+
 hist = model.fit(X_train, Y_train,
           batch_size=BATCH_SIZE, epochs=EPOCHS)
 
-model.evaluate(X_test, Y_test)
-
 # layer0 = [np.array([[0.000001, 0.0], [0.0, 0.000001]], dtype=np.float32), np.array([-0.000001, -0.000001], dtype=np.float32)]
-# layer2 = [np.array([[33.3333], [-33.3333]], dtype=np.float32), np.array([-3.912023], dtype=np.float32)]
+# layer1 = [np.array([[33.3333], [-33.3333]], dtype=np.float32), np.array([-3.912023], dtype=np.float32)]
 
 # model.layers[0].set_weights(layer0)
 # model.layers[1].set_weights(layer2)
 
-print('ZeroMAE*5', np.mean(Y_test))
+model.evaluate(X_test, Y_test)
+
+print('ZeroMAE', np.mean(Y_test))
 
 MeanMAE5Counter = 0
 for i in Ytest_list:
     MeanMAE5Counter += abs(float(i) - sum(Ytest_list)/len(Ytest_list))
 
-print('MeanMAE*5:', MeanMAE5Counter/len(Ytest_list))
+print('MeanMAE:', MeanMAE5Counter/len(Ytest_list))
 
 save = input('save? y ')
 if save == 'y':
