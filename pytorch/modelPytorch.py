@@ -64,15 +64,15 @@ else:
     model = Model()
 
 optimizer = optim.Adadelta(model.parameters())
-criterion = nn.L1Loss()
+criterion = nn.MSELoss()
 
 def train(epoch):
     model.train()
     for batch_id, (data, target) in enumerate(train_data):
         data = Variable(data)
         target = Variable(target)
-        optimizer.zero_grad()
         Y_pred = model(data)
+        optimizer.zero_grad()
         loss = criterion(Y_pred, target)
         loss.backward()
         optimizer.step()
@@ -82,15 +82,15 @@ def train(epoch):
 
 def test():
     model.eval()
-    loss = 0
+    totalLoss = 0
     for data, target in test_data:
         data = Variable(data)
         target = Variable(target)
         Y_pred = model(data)
-        loss += criterion(Y_pred, target)
+        loss = criterion(Y_pred, target)
+        totalLoss += loss
 
-    loss = loss / len(test_data)
-    print('Custom Durchschnittsloss: ', loss.item())
+    print('Custom Durchschnittsloss: ', totalLoss / len(test_data))
     print('ZeroMSE: ', testMean)
 
 for epoch in range(EPOCHS):
