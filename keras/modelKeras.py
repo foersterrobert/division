@@ -8,7 +8,8 @@ import decimal
 import os
 
 BATCH_SIZE = 4
-EPOCHS = 90
+EPOCHS = 120
+LEARNING_RATE = 0.0001
 
 def devision_data(size):
     xdata = []
@@ -81,8 +82,7 @@ model = Sequential([
     Dense(1, activation=custom_activation),
 ])
 
-model.compile(optimizer='nadam',
-              loss='mean_absolute_error')
+model.compile(optimizer=keras.optimizers.Adam(learning_rate=LEARNING_RATE), loss='mean_absolute_error')
 
 
 hist = model.fit(X_train, Y_train,
