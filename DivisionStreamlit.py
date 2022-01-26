@@ -39,7 +39,7 @@ def AktivierungsFunktionHard(x):
 framework = st.selectbox("Model:", options=['Keras', 'Python Function'])
 
 with st.form('integers'):
-    col1, col2 = st.beta_columns(2)
+    col1, col2 = st.columns(2)
     int1 = col1.number_input("Int1", value=20.7, step=1.0)
     int2 = col2.number_input("Int2", value=4.26, step=1.0)
     btn = st.form_submit_button('Divide')
